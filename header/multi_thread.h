@@ -3,7 +3,7 @@
 // Create other necessary functions here
 
 int t_num = 0;
-int no_of_threads = 256;
+int no_of_threads = 64;
 int N,n,size;;
 int *mtB, *mtA, *mtoutput;
 pthread_mutex_t lock;
@@ -87,8 +87,4 @@ void multiThread(int Num, int *matA, int *matB, int *output)
     
     output = mtoutput;
 
-
-    // cout<<"MT: ";
-	// for(int i = 0; i< 2*N-1;i++)	cout<<output[i]<<"\t";
-	// cout<<endl;
 }
