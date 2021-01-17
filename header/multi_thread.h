@@ -1,19 +1,24 @@
 #include <pthread.h>
-#include <math.h>
-// Create other necessary functions here
 
 int t_num = 0;
 int no_of_threads = 64;
 int N,n,size;;
 int *mtB, *mtA, *mtoutput;
 pthread_mutex_t lock;
+// Creating a function for threads to multiply their dedicated diagonals(row + col values) 
 void *multiply( void *arg){
+    /*t_num is global variable shared between all the created threads so 
+    it is kept inside mutex */
     
     pthread_mutex_lock(&lock);
-    int thread_num = t_num++;
+    int thread_num = t_num++;  /*thread_num is assigned to every thread on the basis of FCFS*/
     pthread_mutex_unlock(&lock);
+    
+    // k is defined to identify the offset of a thread, from where it 
+    // needs to work and how much it needs to work
     int k = thread_num*size;
-    // cout<<thread_num << "\t"<<t_num<<"\t"<<size<<endl;
+    
+    /*Starting half threads will perform their tasks on initial loop*/
     if (thread_num/n == 0){
         for(int i = k; i < k + size; ++i) {
             int temp = 0;
@@ -26,11 +31,12 @@ void *multiply( void *arg){
                 temp += mtA[rowA * N + colA] * mtB[rowB * N + colB];
             }
             mtoutput[i] = temp;
-            //  cout<<i<< endl;
         }
     }
     
+    /*Later half threads will perform their tasks on final loop*/
     else{
+        // Except last assigned thread all other will run till their assigned size
         if (t_num != no_of_threads){
             for(int i = k; i < k + size ; ++i) {
                 int temp = 0;
@@ -46,6 +52,8 @@ void *multiply( void *arg){
             
             }
         }
+        
+        // last assigned thread will run 1 less time then the assigned size
         else{
             for(int i = k; i < k+ size-1; ++i) {
             int temp = 0;
@@ -60,31 +68,33 @@ void *multiply( void *arg){
             mtoutput[i] = temp;
             }
         }
-
-    // Iterate over second half of output elements
-
     }
     return NULL;
 }
-// Fill in this function
+
 void multiThread(int Num, int *matA, int *matB, int *output)
 {   
+    /*Initialize global variables*/
     N = Num;
     mtA = matA;
     mtB = matB;
     mtoutput = output;
     pthread_t tid[no_of_threads];
-    // cout<<"K: "<<k<<endl;
+    /*size is the number of diagonals a thread needs to cover*/
     size = 2*N/no_of_threads;
+    /*n will partition the initial half of threads and later half 
+    of the threads as they have dedicated multiplication loops */
     n = no_of_threads/2;
-
+    /*Creating threads*/
     for (int i = 0; i < no_of_threads; i++){
         pthread_create(&tid[i], NULL, multiply, NULL);
     }
+
+    /*Instructing threads to perform their dedicated work*/
     for (int i = 0; i < no_of_threads; i++){
         pthread_join(tid[i], NULL);
     }
-    
+    // Reassign output of multiplication to output matrix pointer
     output = mtoutput;
 
 }
